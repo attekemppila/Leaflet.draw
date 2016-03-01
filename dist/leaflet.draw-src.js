@@ -637,7 +637,8 @@ L.Draw.Polygon = L.Draw.Polyline.extend({
 			fill: true,
 			fillColor: null, //same as color by default
 			fillOpacity: 0.2,
-			clickable: true
+			clickable: true,
+			closed: true
 		}
 	},
 
@@ -682,6 +683,32 @@ L.Draw.Polygon = L.Draw.Polyline.extend({
 			text: text,
 			subtext: subtext
 		};
+	},
+
+	_updateGuide: function (newPos) {
+		if(!this.options.shapeOptions.closed)  {
+				L.Draw.Polyline.prototype._updateGuide.call(this, newPos);
+				return;
+		}
+
+		var markerCount = this._markers.length;
+
+		if (markerCount > 0) {
+			newPos = newPos || this._map.latLngToLayerPoint(this._currentLatLng);
+
+			// draw the guide line
+			this._clearGuides();
+			this._drawGuide(
+				this._map.latLngToLayerPoint(this._markers[markerCount - 1].getLatLng()),
+				newPos
+			);
+			if(markerCount > 1) {
+				this._drawGuide(
+					this._map.latLngToLayerPoint(this._markers[0].getLatLng()),
+					newPos
+				);
+			}
+		}
 	},
 
 	_getMeasurementString: function () {
