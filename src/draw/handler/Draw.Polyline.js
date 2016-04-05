@@ -189,6 +189,8 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 	},
 
 	_finishShape: function () {
+		this._startFinishShape();
+
 		var intersects = this._poly.newLatLngIntersects(this._poly.getLatLngs()[0], true);
 
 		if ((!this.options.allowIntersection && intersects) || !this._shapeIsValid()) {
@@ -197,10 +199,20 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		}
 
 		this._fireCreatedEvent();
+		if(this.finishShapeCanceled) return;
+
 		this.disable();
 		if (this.options.repeatMode) {
 			this.enable();
 		}
+	},
+
+	_startFinishShape: function() {
+			this._finishShapeCanceled = false;
+	},
+
+	cancelFinishShape: function () {
+			this._finishShapeCanceled = true;
 	},
 
 	//Called to verify the shape is valid when the user tries to finish it
