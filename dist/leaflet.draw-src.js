@@ -391,7 +391,7 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		}
 
 		this._fireCreatedEvent();
-		if(this.finishShapeCanceled) return;
+		if(this._finishShapeCanceled) return;
 
 		this.disable();
 		if (this.options.repeatMode) {
