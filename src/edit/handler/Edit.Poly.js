@@ -191,10 +191,10 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			.off('click', this._onMarkerClick, this);
 	},
 
-	_fireEdit: function () {
+	_fireEdit: function (triggerer) {
 		this._poly.edited = true;
 		this._poly.fire('edit');
-		this._poly._map.fire('draw:editvertex', { layers: this._markerGroup });
+		this._poly._map.fire('draw:editvertex', { layers: this._markerGroup, triggerer: triggerer });
 	},
 
 	_onMarkerDrag: function (e) {
@@ -248,7 +248,7 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			marker._prev._middleRight = null;
 		}
 
-		this._fireEdit();
+		this._fireEdit(e);
 	},
 
 	_onTouchMove: function (e) {
@@ -322,10 +322,10 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			this._createMiddleMarker(marker, marker2);
 		};
 
-		onClick = function () {
+		onClick = function (e) {
 			onDragStart.call(this);
 			onDragEnd.call(this);
-			this._fireEdit();
+			this._fireEdit(e);
 		};
 
 		marker
