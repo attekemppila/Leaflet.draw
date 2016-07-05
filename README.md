@@ -1,8 +1,9 @@
 
 [![Build Status](https://travis-ci.org/Leaflet/Leaflet.draw.svg?branch=master)](https://travis-ci.org/Leaflet/Leaflet.draw)
 
- * Leaflet.draw: [![Join the chat at https://gitter.im/Leaflet/Leaflet.draw](https://badges.gitter.im/Leaflet/Leaflet.draw.svg)](https://gitter.im/Leaflet/Leaflet.draw?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
- * Leaflet: [![Gitter](https://badges.gitter.im/Leaflet/Leaflet.svg)](https://gitter.im/Leaflet/Leaflet?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+ Leaflet.draw: [![Join the chat at https://gitter.im/Leaflet/Leaflet.draw](https://badges.gitter.im/Leaflet/Leaflet.draw.svg)](https://gitter.im/Leaflet/Leaflet.draw?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+ Leaflet: [![Gitter](https://badges.gitter.im/Leaflet/Leaflet.svg)](https://gitter.im/Leaflet/Leaflet?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 # Important
 Leaflet.draw 0.2.3+ requires [Leaflet 0.7.x](https://github.com/Leaflet/Leaflet/releases).
@@ -158,6 +159,22 @@ Triggered when the user starts edit mode by clicking the edit tool button.
 | --- | --- | ---
 | handler | String | The type of edit this is. One of: `edit`
 
+#### draw:editmove
+
+Triggered as the user moves a rectangle, circle or marker.
+
+| Property | Type | Description
+| --- | --- | ---
+| layer | [ILayer](http://leafletjs.com/reference.html#ilayer) | Layer that was just moved.
+
+#### draw:editresized
+
+Triggered as the user resizes a rectangle or circle.
+
+| Property | Type | Description
+| --- | --- | ---
+| layer | [ILayer](http://leafletjs.com/reference.html#ilayer) | Layer that was just moved.
+
 #### draw:editvertex
 
 Triggered when a vertex is edited on a polyline or polygon.
@@ -271,8 +288,8 @@ Polygon options include all of the Polyline options plus the option to show the 
 | zIndexOffset | Number | `2000` | This should be a high number to ensure that you can draw over all other layers on the map.
 | repeatMode | Bool | `false` | Determines if the draw tool remains enabled after drawing a shape.
 
-<a name="editoptions" />
-### EditOptions
+<a name="editpolyoptions" />
+### EditPolyOptions
 
 These options will allow you to configure the draw toolbar and its handlers.
 
@@ -281,6 +298,7 @@ These options will allow you to configure the draw toolbar and its handlers.
 | featureGroup | [Leaflet FeatureGroup](http://leafletjs.com/reference.html#featuregroup) | `null` | This is the FeatureGroup that stores all editable shapes. **THIS IS REQUIRED FOR THE EDIT TOOLBAR TO WORK**
 | edit | [EditHandlerOptions](#edithandleroptions) | `{ }` | Edit handler options. Set to `false` to disable handler.
 | remove | [DeleteHandlerOptions](#deletehandleroptions) | `{ }` | Delete handler options. Set to `false` to disable handler.
+| poly | [EditPolyOptions](#editpoly) |  `{ }` | Set polygon editing options
 
 <a name="edithandleroptions" />
 #### EditHandlerOptions
@@ -307,6 +325,15 @@ E.g. The edit options below will maintain the layer color and set the edit opaci
 
 | Option | Type | Default | Description
 | --- | --- | --- | ---
+
+
+<a name="editpoly" />
+#### EditPolyOptions
+
+| Option | Type | Default | Description
+| --- | --- | --- | ---
+| allowIntersection | Bool | `true` |  Determines if line segments can cross.
+
 
 <a name="drawlocal" />
 #### Customizing language and text in Leaflet.draw
@@ -402,7 +429,7 @@ map.on('draw:created', function (e) {
 		layer.bindPopup('A popup!');
 	}
 
-	drawnItems.addLayer(layer);
+	editableLayers.addLayer(layer);
 });
 ````
 
@@ -459,6 +486,17 @@ If you only require certain handlers (and not the UI), you may wish to create a 
 See [edit handlers example](https://github.com/Leaflet/Leaflet.draw/blob/master/examples/edithandlers.html) which uses only the edit handlers.
 
 <a name="thanks" />
+
+### Testing
+
+To test you can install the npm dependencies:
+
+    npm install
+
+and then use:
+
+    jake test
+
 ## Thanks
 
 Touch friendly version of Leaflet.draw was created and maintained by Michael Guild (https://github.com/michaelguild13).
