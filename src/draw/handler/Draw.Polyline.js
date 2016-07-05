@@ -268,6 +268,8 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 				.distanceTo(this._mouseDownOrigin);
 			if (Math.abs(distance) < 9 * (window.devicePixelRatio || 1)) {
 				this.addVertex(e.latlng);
+				// Update the guide line
+				this._updateGuide(e.layerPoint);
 			}
 		}
 		this._mouseDownOrigin = null;
