@@ -381,13 +381,9 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 	},
 
 	_finishShape: function () {
-<<<<<<< HEAD
 		this._startFinishShape();
 
-		var intersects = this._poly.newLatLngIntersects(this._poly.getLatLngs()[0], true);
-=======
 		var intersects = this._poly.newLatLngIntersects(this._poly.getLatLngs()[this._poly.getLatLngs().length - 1]);
->>>>>>> refs/remotes/Leaflet/master
 
 		if ((!this.options.allowIntersection && intersects) || !this._shapeIsValid()) {
 			this._showErrorTooltip();
