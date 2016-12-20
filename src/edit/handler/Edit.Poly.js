@@ -383,6 +383,7 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 	},
 
 	_createMiddleMarker: function (marker1, marker2) {
+		if (!this._poly._map) return; // Hack that fixes starnge error from unknown event trying to create middle marker
 		var latlng = this._getMiddleLatLng(marker1, marker2),
 			marker = this._createMarker(latlng),
 			onClick,
@@ -390,6 +391,7 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			onDragEnd;
 
 		marker.setOpacity(0.6);
+		marker.isMiddleMarker = true;
 
 		marker1._middleRight = marker2._middleLeft = marker;
 
@@ -422,6 +424,8 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			marker.off('dragstart', onDragStart, this);
 			marker.off('dragend', onDragEnd, this);
 			marker.off('touchmove', onDragStart, this);
+
+			marker.isMiddleMarker = false;
 
 			this._createMiddleMarker(marker1, marker);
 			this._createMiddleMarker(marker, marker2);
