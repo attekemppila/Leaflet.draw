@@ -391,7 +391,6 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			onDragEnd;
 
 		marker.setOpacity(0.6);
-		marker.isMiddleMarker = true;
 
 		marker1._middleRight = marker2._middleLeft = marker;
 
@@ -424,8 +423,6 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			marker.off('dragstart', onDragStart, this);
 			marker.off('dragend', onDragEnd, this);
 			marker.off('touchmove', onDragStart, this);
-
-			marker.isMiddleMarker = false;
 
 			this._createMiddleMarker(marker1, marker);
 			this._createMiddleMarker(marker, marker2);
