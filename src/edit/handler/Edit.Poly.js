@@ -20,12 +20,9 @@ L.Edit.Poly = L.Handler.extend({
 	},
 
 	// Compatibility method to normalize Poly* objects
-	// between 0.7.x and 1.0+
 	_defaultShape: function () {
-		if (!L.Polyline._flat) {
-			return this._poly._latlngs;
-		}
-		return L.Polyline._flat(this._poly._latlngs) ? this._poly._latlngs : this._poly._latlngs[0];
+		// tsmap: leaflet 1.x use L.LineUtil.isFlat 
+		return L.LineUtil.isFlat(this._poly._latlngs) ? this._poly._latlngs : this._poly._latlngs[0];
 	},
 
 	_eachVertexHandler: function (callback) {
@@ -62,7 +59,15 @@ L.Edit.Poly = L.Handler.extend({
 	_initHandlers: function () {
 		this._verticesHandlers = [];
 		for (var i = 0; i < this.latlngs.length; i++) {
-			this._verticesHandlers.push(new L.Edit.PolyVerticesEdit(this._poly, this.latlngs[i], this._poly.options.poly));
+			// tsmap: fix holes editable
+			if(Array.isArray(this.latlngs[i][0])) {
+				for(var j = 0; j < this.latlngs[i].length; j++) {
+					this._verticesHandlers.push(new L.Edit.PolyVerticesEdit(this._poly, this.latlngs[i][j], this._poly.options.poly));
+				}	
+			} else {
+				// tsmap: Leaflet.draw default, did not support holes
+				this._verticesHandlers.push(new L.Edit.PolyVerticesEdit(this._poly, this.latlngs[i], this._poly.options.poly));
+			}
 		}
 	},
 
@@ -86,7 +91,8 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			className: 'leaflet-div-icon leaflet-editing-icon'
 		}),
 		touchIcon: new L.DivIcon({
-			iconSize: new L.Point(20, 20),
+			// tsmap: touchIcon size
+			iconSize: new L.Point(8, 8), 
 			className: 'leaflet-div-icon leaflet-editing-icon leaflet-touch-icon'
 		}),
 		drawError: {
@@ -115,12 +121,9 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 	},
 
 	// Compatibility method to normalize Poly* objects
-	// between 0.7.x and 1.0+
 	_defaultShape: function () {
-		if (!L.Polyline._flat) {
-			return this._latlngs;
-		}
-		return L.Polyline._flat(this._latlngs) ? this._latlngs : this._latlngs[0];
+		// tsmap: leaflet 1.x use L.LineUtil.isFlat
+		return L.LineUtil.isFlat(this._latlngs) ? this._latlngs : this._latlngs[0];
 	},
 
 	// @method addHooks(): void
@@ -248,6 +251,10 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			.on('MSPointerMove', this._onTouchMove, this)
 			.on('MSPointerUp', this._fireEdit, this);
 
+		if (!this._markerGroup) {
+			// tsmap: fix this._markerGroup was undefined
+			this._markerGroup = new L.LayerGroup();
+		}
 		this._markerGroup.addLayer(marker);
 
 		return marker;
@@ -277,17 +284,23 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			.off('dragstart', this._onMarkerDragStart, this)
 			.off('drag', this._onMarkerDrag, this)
 			.off('dragend', this._fireEdit, this)
-			.off('touchmove', this._onMarkerDrag, this)
 			.off('touchend', this._fireEdit, this)
 			.off('click', this._onMarkerClick, this)
 			.off('MSPointerMove', this._onTouchMove, this)
 			.off('MSPointerUp', this._fireEdit, this);
+
+		// tsmap: listener not found - remove listener only if it exists
+		if(marker._events["touchmove"] && marker._events["touchmove"].some(function(event) { return event.fn === this._onMarkerDrag;})) {
+			marker.off('touchmove', this._onMarkerDrag, this)
+		}
+			
 	},
 
-	_fireEdit: function () {
+	// tsmap: forward triggerer event
+	_fireEdit: function (triggerer) {
 		this._poly.edited = true;
 		this._poly.fire('edit');
-		this._poly._map.fire(L.Draw.Event.EDITVERTEX, {layers: this._markerGroup, poly: this._poly});
+		this._poly._map.fire(L.Draw.Event.EDITVERTEX, {layers: this._markerGroup, poly: this._poly, triggerer: triggerer});
 	},
 
 	_onMarkerDrag: function (e) {
@@ -375,12 +388,14 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			marker._prev._middleRight = null;
 		}
 
-		this._fireEdit();
+		// tsmap: forward triggerer event
+		this._fireEdit(e);
 	},
 
 	_onContextMenu: function (e) {
 		var marker = e.target;
-		var poly = this._poly;
+		// tsmap: commented out unused var, build warning
+		// var poly = this._poly;
 		this._poly._map.fire(L.Draw.Event.MARKERCONTEXT, {marker: marker, layers: this._markerGroup, poly: this._poly});
 		L.DomEvent.stopPropagation;
 	},
@@ -421,6 +436,9 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 
 		marker.setOpacity(0.6);
 
+		// tsmap: add property isMiddleMarker
+		marker.isMiddleMarker = true;
+
 		marker1._middleRight = marker2._middleLeft = marker;
 
 		onDragStart = function () {
@@ -451,16 +469,20 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 		onDragEnd = function () {
 			marker.off('dragstart', onDragStart, this);
 			marker.off('dragend', onDragEnd, this);
-			marker.off('touchmove', onDragStart, this);
-
+			// tsmap: listener not found - remove listener only if it exists
+			if(marker._events["touchmove"] && marker._events["touchmove"].some(function(event) { return event.fn === onDragStart;})) {
+				marker.off('touchmove', onDragStart, this);
+			}
 			this._createMiddleMarker(marker1, marker);
 			this._createMiddleMarker(marker, marker2);
 		};
 
-		onClick = function () {
+		// tsmap: forward triggerer event
+		onClick = function (e) {
 			onDragStart.call(this);
 			onDragEnd.call(this);
-			this._fireEdit();
+			// tsmap: forward triggerer event
+			this._fireEdit(e);
 		};
 
 		marker
@@ -482,7 +504,8 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 	},
 
 	_getMiddleLatLng: function (marker1, marker2) {
-		var map = this._poly._map,
+		 // tsmap: this._poly._map was undefined for unknown reason
+		var map = this._map,
 			p1 = map.project(marker1.getLatLng()),
 			p2 = map.project(marker2.getLatLng());
 
