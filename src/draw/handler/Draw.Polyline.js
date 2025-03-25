@@ -22,7 +22,8 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 			className: 'leaflet-div-icon leaflet-editing-icon'
 		}),
 		touchIcon: new L.DivIcon({
-			iconSize: new L.Point(20, 20),
+			// tsmap: touchIcon size
+			iconSize: new L.Point(8, 8), 
 			className: 'leaflet-div-icon leaflet-editing-icon leaflet-touch-icon'
 		}),
 		guidelineDistance: 20,
@@ -146,8 +147,12 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 			.off('mousemove', this._onMouseMove, this)
 			.off('zoomlevelschange', this._onZoomEnd, this)
 			.off('zoomend', this._onZoomEnd, this)
-			.off('touchstart', this._onTouch, this)
-			.off('click', this._onTouch, this);
+			.off('touchstart', this._onTouch, this);
+		
+			// tsmap: listener not found - remove listener only if it exists
+			if(this._map._events["click"] && this._map._events["click"].some(function(event) { return event.fn === this._onTouch;})) {
+				this._map.off('click', this._onTouch, this);
+			}
 	},
 
 	// @method deleteLastVertex(): void
@@ -213,6 +218,9 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 	},
 
 	_finishShape: function () {
+		// tsmap: able to cancel _finishShape
+		this._startFinishShape();
+
 		var latlngs = this._poly._defaultShape ? this._poly._defaultShape() : this._poly.getLatLngs();
 		var intersects = this._poly.newLatLngIntersects(latlngs[latlngs.length - 1]);
 
@@ -222,10 +230,24 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		}
 
 		this._fireCreatedEvent();
+
+		// tsmap: able to cancel _finishShape
+		if(this._finishShapeCanceled) return;
+
 		this.disable();
 		if (this.options.repeatMode) {
 			this.enable();
 		}
+	},
+
+	// tsmap: able to cancel _finishShape
+	_startFinishShape: function() {
+		this._finishShapeCanceled = false;
+	},
+
+	// tsmap: able to cancel _finishShape
+	cancelFinishShape: function () {
+		this._finishShapeCanceled = true;
 	},
 
 	// Called to verify the shape is valid when the user tries to finish it
@@ -282,6 +304,15 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		}
 	},
 
+	// tsmap: reset if _mouseUp was cancelled by tool,
+	// there was _onMouseDown but never _onMouseUp
+	// this fixes invalid state on next click
+	_resetMouseDown: function() {
+		this._clickHandled = null;
+		this._touchHandled = null;
+		this._disableMarkers = false;
+	},
+
 	_startPoint: function (clientX, clientY) {
 		this._mouseDownOrigin = L.point(clientX, clientY);
 	},
@@ -292,6 +323,8 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		var clientY = originalEvent.clientY;
 		this._endPoint.call(this, clientX, clientY, e);
 		this._clickHandled = null;
+		// tsmap: update guide line
+		this._updateGuide(e.layerPoint);
 	},
 
 	_endPoint: function (clientX, clientY, e) {
@@ -302,8 +335,9 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 			if (this.options.maxPoints > 1 && this.options.maxPoints == this._markers.length + 1) {
 				this.addVertex(e.latlng);
 				this._finishShape();
-			} else if (lastPtDistance < 10 && L.Browser.touch) {
-				this._finishShape();
+			}	else if (lastPtDistance < 10 && L.Browser.touch) {
+				// tsmap: no draw minimun distance
+				// this._finishShape();
 			} else if (Math.abs(dragCheckDistance) < 9 * (window.devicePixelRatio || 1)) {
 				this.addVertex(e.latlng);
 			}
@@ -400,6 +434,15 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 				this._map.latLngToLayerPoint(this._markers[markerCount - 1].getLatLng()),
 				newPos
 			);
+
+			// tsmap: update guide line
+			// when drawing polygon, add guide line also to start point, to make it look complete
+			if(this.type === "polygon") {
+				this._drawGuide(
+					this._map.latLngToLayerPoint(this._markers[0].getLatLng()),
+					newPos
+				);
+			}
 		}
 	},
 
