@@ -149,10 +149,10 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 			.off('zoomend', this._onZoomEnd, this)
 			.off('touchstart', this._onTouch, this);
 		
-			// tsmap: listener not found - remove listener only if it exists
-			if(this._map._events["click"] && this._map._events["click"].some(function(event) { return event.fn === this._onTouch;})) {
-				this._map.off('click', this._onTouch, this);
-			}
+		// tsmap: listener not found - remove listener only if it exists
+		if(L.TsmapUtil.hasListenerInEvents(this._map._events["click"], this._onTouch)) {
+			this._map.off('click', this._onTouch, this);
+		}
 	},
 
 	// @method deleteLastVertex(): void
@@ -407,7 +407,10 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 		// Remove the old marker click handler (as only the last point should close the polyline)
 		if (markerCount > 2) {
-			this._markers[markerCount - 2].off('click', this._finishShape, this);
+			// tsmap: listener not found - remove listener only if it exists
+			if(L.TsmapUtil.hasListenerInEvents(this._markers[markerCount - 2]._events["click"], this._finishShape)) {
+				this._markers[markerCount - 2].off('click', this._finishShape, this);
+			}
 		}
 	},
 

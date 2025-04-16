@@ -290,7 +290,7 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			.off('MSPointerUp', this._fireEdit, this);
 
 		// tsmap: listener not found - remove listener only if it exists
-		if(marker._events["touchmove"] && marker._events["touchmove"].some(function(event) { return event.fn === this._onMarkerDrag;})) {
+		if(L.TsmapUtil.hasListenerInEvents(marker._events["touchmove"], this._onMarkerDrag)) {
 			marker.off('touchmove', this._onMarkerDrag, this)
 		}
 			
@@ -470,7 +470,7 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			marker.off('dragstart', onDragStart, this);
 			marker.off('dragend', onDragEnd, this);
 			// tsmap: listener not found - remove listener only if it exists
-			if(marker._events["touchmove"] && marker._events["touchmove"].some(function(event) { return event.fn === onDragStart;})) {
+			if(L.TsmapUtil.hasListenerInEvents(marker._events["touchmove"], onDragStart)) {
 				marker.off('touchmove', onDragStart, this);
 			}
 			this._createMiddleMarker(marker1, marker);

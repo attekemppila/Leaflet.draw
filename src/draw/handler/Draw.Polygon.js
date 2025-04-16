@@ -54,7 +54,10 @@ L.Draw.Polygon = L.Draw.Polyline.extend({
 			this._markers[markerCount - 1].on('dblclick', this._finishShape, this);
 			// Only need to remove handler if has been added before
 			if (markerCount > 3) {
-				this._markers[markerCount - 2].off('dblclick', this._finishShape, this);
+				// tsmap: listener not found - remove listener only if it exists
+				if(L.TsmapUtil.hasListenerInEvents(this._markers[markerCount - 2]._events["dblclick"], this._finishShape)) {
+					this._markers[markerCount - 2].off('dblclick', this._finishShape, this);
+				}
 			}
 		}
 	},
