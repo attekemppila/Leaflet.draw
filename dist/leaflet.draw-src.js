@@ -1,5 +1,5 @@
 /*
- Leaflet.draw 1.0.3+7c1c96a, a plugin that adds drawing and editing tools to Leaflet powered maps.
+ Leaflet.draw 1.0.3+1dd86a6, a plugin that adds drawing and editing tools to Leaflet powered maps.
  (c) 2012-2017, Jacob Toye, Jon West, Smartrak, Leaflet
 
  https://github.com/Leaflet/Leaflet.draw
@@ -8,7 +8,7 @@
 (function (window, document, undefined) {/**
  * Leaflet.draw assumes that you have already included the Leaflet library.
  */
-L.drawVersion = "1.0.3+7c1c96a";
+L.drawVersion = "1.0.3+1dd86a6";
 /**
  * @class L.Draw
  * @aka Draw
@@ -634,10 +634,10 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 			.off('zoomend', this._onZoomEnd, this)
 			.off('touchstart', this._onTouch, this);
 		
-			// tsmap: listener not found - remove listener only if it exists
-			if(this._map._events["click"] && this._map._events["click"].some(function(event) { return event.fn === this._onTouch;})) {
-				this._map.off('click', this._onTouch, this);
-			}
+		// tsmap: listener not found - remove listener only if it exists
+		if(L.TsmapUtil.hasListenerInEvents(this._map._events["click"], this._onTouch)) {
+			this._map.off('click', this._onTouch, this);
+		}
 	},
 
 	// @method deleteLastVertex(): void
@@ -892,7 +892,10 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 		// Remove the old marker click handler (as only the last point should close the polyline)
 		if (markerCount > 2) {
-			this._markers[markerCount - 2].off('click', this._finishShape, this);
+			// tsmap: listener not found - remove listener only if it exists
+			if(L.TsmapUtil.hasListenerInEvents(this._markers[markerCount - 2]._events["click"], this._finishShape)) {
+				this._markers[markerCount - 2].off('click', this._finishShape, this);
+			}
 		}
 	},
 
@@ -1177,7 +1180,10 @@ L.Draw.Polygon = L.Draw.Polyline.extend({
 			this._markers[markerCount - 1].on('dblclick', this._finishShape, this);
 			// Only need to remove handler if has been added before
 			if (markerCount > 3) {
-				this._markers[markerCount - 2].off('dblclick', this._finishShape, this);
+				// tsmap: listener not found - remove listener only if it exists
+				if(L.TsmapUtil.hasListenerInEvents(this._markers[markerCount - 2]._events["dblclick"], this._finishShape)) {
+					this._markers[markerCount - 2].off('dblclick', this._finishShape, this);
+				}
 			}
 		}
 	},
@@ -1538,8 +1544,12 @@ L.Draw.Marker = L.Draw.Feature.extend({
 		L.Draw.Feature.prototype.removeHooks.call(this);
 
 		if (this._map) {
+			// tsmap: listener not found - remove listener only if it exists
+			if(L.TsmapUtil.hasListenerInEvents(this._map._events["click"], this._onClick)) {
+				this._map.off('click', this._onClick, this);
+			}
+
 			this._map
-				.off('click', this._onClick, this)
 				.off('click', this._onTouch, this);
 			if (this._marker) {
 				this._marker.off('click', this._onClick, this);
@@ -2116,7 +2126,7 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			.off('MSPointerUp', this._fireEdit, this);
 
 		// tsmap: listener not found - remove listener only if it exists
-		if(marker._events["touchmove"] && marker._events["touchmove"].some(function(event) { return event.fn === this._onMarkerDrag;})) {
+		if(L.TsmapUtil.hasListenerInEvents(marker._events["touchmove"], this._onMarkerDrag)) {
 			marker.off('touchmove', this._onMarkerDrag, this)
 		}
 			
@@ -2296,7 +2306,7 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			marker.off('dragstart', onDragStart, this);
 			marker.off('dragend', onDragEnd, this);
 			// tsmap: listener not found - remove listener only if it exists
-			if(marker._events["touchmove"] && marker._events["touchmove"].some(function(event) { return event.fn === onDragStart;})) {
+			if(L.TsmapUtil.hasListenerInEvents(marker._events["touchmove"], onDragStart)) {
 				marker.off('touchmove', onDragStart, this);
 			}
 			this._createMiddleMarker(marker1, marker);
@@ -3487,6 +3497,22 @@ L.Polygon.include({
 		return this._lineSegmentsIntersectsRange(lastPoint, firstPoint, maxIndex, 1);
 	}
 });
+
+
+
+/**
+ * @class L.TsmapUtil
+ * @aka TsmapUtil
+ */
+L.TsmapUtil = {
+
+	// tsmap: listener not found - remove listener only if it exists
+	// @method hasListenerInEvents(): boolean
+	// Checks to see if listenerFunction exists in eventsArray
+	hasListenerInEvents: function (eventsArray, listenerFunction) {
+		return eventsArray && eventsArray.some(function(event) { return event.fn === listenerFunction; });
+	}
+};
 
 
 

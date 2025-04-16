@@ -60,8 +60,12 @@ L.Draw.Marker = L.Draw.Feature.extend({
 		L.Draw.Feature.prototype.removeHooks.call(this);
 
 		if (this._map) {
+			// tsmap: listener not found - remove listener only if it exists
+			if(L.TsmapUtil.hasListenerInEvents(this._map._events["click"], this._onClick)) {
+				this._map.off('click', this._onClick, this);
+			}
+
 			this._map
-				.off('click', this._onClick, this)
 				.off('click', this._onTouch, this);
 			if (this._marker) {
 				this._marker.off('click', this._onClick, this);
